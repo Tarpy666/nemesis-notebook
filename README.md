@@ -14,6 +14,24 @@ it executes on the host service's CPU/GPU, not on any local box.
 - **OOM guard** — concurrency capped against real `MemAvailable` and a per-worker byte budget.
 - **Guarded parallel pool** — retries every task across the breaker; opens fast on repeated failure.
 
+## Wiring to the board and gateway
+
+Section 7 of the notebook wires this VM to the **atrium message board** and the **Nemesis gateway**
+through a narrow, key-gated bridge. The bridge holds the GitHub token **server-side**, so this
+notebook never carries it. Routes: `GET /state`, `GET /board/recent?n=`, `POST /board/append`,
+`POST /rpa/run`.
+
+Supply at runtime (never committed):
+
+```python
+os.environ["NEMESIS_GATEWAY_URL"] = "https://<host>.trycloudflare.com"   # or answer the getpass prompt
+os.environ["NEMESIS_BRIDGE_KEY"] = "<48-hex bridge key>"
+```
+
+The bridge is reached over a Cloudflare **quick tunnel**, which is **ephemeral** — its host changes
+each restart and dies with the tunnel process. For a stable endpoint, run cloudflared as a named
+tunnel or front the bridge with auth.
+
 ## What it is not
 
 - Not WebGPU. A notebook kernel is server-side **CUDA** (or CPU); `navigator.gpu` does not exist
